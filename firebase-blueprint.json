@@ -1,0 +1,438 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account preferences for GharSetu.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "preferredUnit": {
+          "type": "string",
+          "enum": ["gaj", "sqft"]
+        },
+        "city": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "preferredUnit", "city", "createdAt", "updatedAt"]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "Public rental house listing published by a property owner.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "title": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "rooms": {
+          "type": "number"
+        },
+        "bhkType": {
+          "type": "string",
+          "enum": ["1 RK", "1 BHK", "2 BHK", "3 BHK", "4+ BHK"]
+        },
+        "floor": {
+          "type": "string",
+          "enum": ["Ground Floor", "1st Floor", "2nd Floor", "3rd Floor+", "Independent Duplex"]
+        },
+        "areaGaj": {
+          "type": "number"
+        },
+        "areaSqft": {
+          "type": "number"
+        },
+        "monthlyRent": {
+          "type": "number"
+        },
+        "securityDeposit": {
+          "type": "number"
+        },
+        "negotiable": {
+          "type": "boolean"
+        },
+        "furnishing": {
+          "type": "string",
+          "enum": ["Unfurnished", "Semi-Furnished", "Fully Furnished"]
+        },
+        "paintCondition": {
+          "type": "string",
+          "enum": ["Freshly Painted", "Well Maintained", "Needs Touch-up"]
+        },
+        "preferredTenant": {
+          "type": "string",
+          "enum": ["Small Family", "Joint Family", "Working Professionals", "Students", "Anyone"]
+        },
+        "maxOccupants": {
+          "type": "number"
+        },
+        "houseRules": {
+          "type": "array"
+        },
+        "ownerPreferenceNote": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "state": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "area": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "addressLine": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 200
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        },
+        "photoUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200000
+        },
+        "status": {
+          "type": "string",
+          "enum": ["available", "rented"]
+        },
+        "isPublished": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "ownerName",
+        "title",
+        "description",
+        "rooms",
+        "bhkType",
+        "floor",
+        "areaGaj",
+        "areaSqft",
+        "monthlyRent",
+        "securityDeposit",
+        "negotiable",
+        "furnishing",
+        "paintCondition",
+        "preferredTenant",
+        "maxOccupants",
+        "houseRules",
+        "ownerPreferenceNote",
+        "state",
+        "city",
+        "area",
+        "addressLine",
+        "lat",
+        "lng",
+        "photoUrl",
+        "status",
+        "isPublished",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "OwnerContact": {
+      "title": "OwnerContact",
+      "description": "Isolated owner contact details for a property listing.",
+      "type": "object",
+      "properties": {
+        "propertyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "contactPhone": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 20,
+          "pattern": "^[0-9+\\-\\s()]{7,20}$"
+        },
+        "visitingHours": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["propertyId", "ownerId", "contactPhone", "visitingHours", "createdAt", "updatedAt"]
+    },
+    "PropertyFeedback": {
+      "title": "PropertyFeedback",
+      "description": "Tenant exit feedback explaining why they skipped a listing so the owner can improve it.",
+      "type": "object",
+      "properties": {
+        "propertyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "propertyOwnerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tenantId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reasons": {
+          "type": "array"
+        },
+        "comment": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "suggestedRent": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["new", "acknowledged", "resolved"]
+        },
+        "ownerActionNote": {
+          "type": "string",
+          "maxLength": 250
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "propertyId",
+        "propertyOwnerId",
+        "tenantId",
+        "reasons",
+        "comment",
+        "suggestedRent",
+        "status",
+        "ownerActionNote",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PropertyInquiry": {
+      "title": "PropertyInquiry",
+      "description": "Visit or rental inquiry sent by a prospective tenant to a property owner.",
+      "type": "object",
+      "properties": {
+        "propertyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "propertyOwnerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tenantId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tenantName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "familySize": {
+          "type": "number"
+        },
+        "tenantType": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "message": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 400
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "accepted", "declined"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "propertyId",
+        "propertyOwnerId",
+        "tenantId",
+        "tenantName",
+        "familySize",
+        "tenantType",
+        "message",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SavedListing": {
+      "title": "SavedListing",
+      "description": "Bookmarked rental property tracked in user profile for rent price change notifications.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "propertyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "propertyTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "propertyArea": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "savedRent": {
+          "type": "number"
+        },
+        "lastSeenRent": {
+          "type": "number"
+        },
+        "savedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "propertyId",
+        "propertyTitle",
+        "propertyArea",
+        "savedRent",
+        "lastSeenRent",
+        "savedAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user account preferences owned exclusively by the authenticated user."
+    },
+    "/users/{userId}/savedListings/{propertyId}": {
+      "schema": { "$ref": "#/entities/SavedListing" },
+      "description": "User-bookmarked rental homes storing original and last-seen rent for price-change alerts."
+    },
+    "/properties/{propertyId}": {
+      "schema": { "$ref": "#/entities/Property" },
+      "description": "Rental property listings searchable by area, radius, budget, and Gaj."
+    },
+    "/properties/{propertyId}/ownerContact/{contactId}": {
+      "schema": { "$ref": "#/entities/OwnerContact" },
+      "description": "Isolated private owner phone and visiting hours for a property."
+    },
+    "/properties/{propertyId}/feedback/{feedbackId}": {
+      "schema": { "$ref": "#/entities/PropertyFeedback" },
+      "description": "Tenant exit feedback routed directly to the property owner for home improvements."
+    },
+    "/properties/{propertyId}/inquiries/{inquiryId}": {
+      "schema": { "$ref": "#/entities/PropertyInquiry" },
+      "description": "Tenant visit requests and rental inquiries for a property."
+    }
+  }
+}

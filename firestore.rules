@@ -1,0 +1,383 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny global safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global hardened primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'preferredUnit', 'city', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'preferredUnit', 'city', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.preferredUnit is string && data.preferredUnit in ['gaj', 'sqft']
+        && data.city is string && data.city.size() <= 80
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSavedListing(data) {
+      return data.keys().hasAll([
+          'userId', 'propertyId', 'propertyTitle', 'propertyArea',
+          'savedRent', 'lastSeenRent', 'savedAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'propertyId', 'propertyTitle', 'propertyArea',
+          'savedRent', 'lastSeenRent', 'savedAt', 'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && isValidId(data.propertyId)
+        && data.propertyTitle is string && data.propertyTitle.size() >= 1 && data.propertyTitle.size() <= 120
+        && data.propertyArea is string && data.propertyArea.size() >= 1 && data.propertyArea.size() <= 140
+        && data.savedRent is number && data.savedRent >= 1000 && data.savedRent <= 500000
+        && data.lastSeenRent is number && data.lastSeenRent >= 1000 && data.lastSeenRent <= 500000
+        && data.savedAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidHouseRulesList(rulesList) {
+      return rulesList is list
+        && rulesList.size() <= 8
+        && (rulesList.size() == 0 || (rulesList[0] is string && rulesList[0].size() >= 1 && rulesList[0].size() <= 80));
+    }
+
+    function isValidReasonsList(reasonsList) {
+      return reasonsList is list
+        && reasonsList.size() >= 1
+        && reasonsList.size() <= 7
+        && reasonsList[0] is string && reasonsList[0].size() >= 1 && reasonsList[0].size() <= 60;
+    }
+
+    function isValidProperty(data) {
+      return data.keys().hasAll([
+          'ownerId', 'ownerName', 'title', 'description', 'rooms', 'bhkType',
+          'floor', 'areaGaj', 'areaSqft', 'monthlyRent', 'securityDeposit',
+          'negotiable', 'furnishing', 'paintCondition', 'preferredTenant',
+          'maxOccupants', 'houseRules', 'ownerPreferenceNote', 'state', 'city',
+          'area', 'addressLine', 'lat', 'lng', 'photoUrl', 'status',
+          'isPublished', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'ownerName', 'title', 'description', 'rooms', 'bhkType',
+          'floor', 'areaGaj', 'areaSqft', 'monthlyRent', 'securityDeposit',
+          'negotiable', 'furnishing', 'paintCondition', 'preferredTenant',
+          'maxOccupants', 'houseRules', 'ownerPreferenceNote', 'state', 'city',
+          'area', 'addressLine', 'lat', 'lng', 'photoUrl', 'status',
+          'isPublished', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && data.ownerName is string && data.ownerName.size() >= 2 && data.ownerName.size() <= 80
+        && data.title is string && data.title.size() >= 4 && data.title.size() <= 120
+        && data.description is string && data.description.size() <= 1000
+        && data.rooms is number && data.rooms >= 1 && data.rooms <= 10
+        && data.bhkType is string && data.bhkType in ['1 RK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK']
+        && data.floor is string && data.floor in ['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor+', 'Independent Duplex']
+        && data.areaGaj is number && data.areaGaj >= 10 && data.areaGaj <= 5000
+        && data.areaSqft is number && data.areaSqft >= 90 && data.areaSqft <= 45000
+        && data.monthlyRent is number && data.monthlyRent >= 1000 && data.monthlyRent <= 500000
+        && data.securityDeposit is number && data.securityDeposit >= 0 && data.securityDeposit <= 2000000
+        && data.negotiable is bool
+        && data.furnishing is string && data.furnishing in ['Unfurnished', 'Semi-Furnished', 'Fully Furnished']
+        && data.paintCondition is string && data.paintCondition in ['Freshly Painted', 'Well Maintained', 'Needs Touch-up']
+        && data.preferredTenant is string && data.preferredTenant in ['Small Family', 'Joint Family', 'Working Professionals', 'Students', 'Anyone']
+        && data.maxOccupants is number && data.maxOccupants >= 1 && data.maxOccupants <= 20
+        && isValidHouseRulesList(data.houseRules)
+        && data.ownerPreferenceNote is string && data.ownerPreferenceNote.size() <= 300
+        && data.state is string && data.state.size() >= 2 && data.state.size() <= 60
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 60
+        && data.area is string && data.area.size() >= 2 && data.area.size() <= 100
+        && data.addressLine is string && data.addressLine.size() >= 4 && data.addressLine.size() <= 200
+        && data.lat is number && data.lat >= -90 && data.lat <= 90
+        && data.lng is number && data.lng >= -180 && data.lng <= 180
+        && data.photoUrl is string && data.photoUrl.size() >= 1 && data.photoUrl.size() <= 200000
+        && data.status is string && data.status in ['available', 'rented']
+        && data.isPublished is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOwnerContact(data) {
+      return data.keys().hasAll(['propertyId', 'ownerId', 'contactPhone', 'visitingHours', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['propertyId', 'ownerId', 'contactPhone', 'visitingHours', 'createdAt', 'updatedAt'])
+        && isValidId(data.propertyId)
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && data.contactPhone is string && data.contactPhone.size() >= 7 && data.contactPhone.size() <= 20
+        && data.contactPhone.matches('^[0-9+\\-\\s()]{7,20}$')
+        && data.visitingHours is string && data.visitingHours.size() <= 100
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFeedback(data) {
+      return data.keys().hasAll([
+          'propertyId', 'propertyOwnerId', 'tenantId', 'reasons', 'comment',
+          'suggestedRent', 'status', 'ownerActionNote', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'propertyId', 'propertyOwnerId', 'tenantId', 'reasons', 'comment',
+          'suggestedRent', 'status', 'ownerActionNote', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.propertyId)
+        && isValidId(data.propertyOwnerId)
+        && isValidId(data.tenantId)
+        && isValidReasonsList(data.reasons)
+        && data.comment is string && data.comment.size() <= 400
+        && data.suggestedRent is number && data.suggestedRent >= 0 && data.suggestedRent <= 500000
+        && data.status is string && data.status in ['new', 'acknowledged', 'resolved']
+        && data.ownerActionNote is string && data.ownerActionNote.size() <= 250
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidInquiry(data) {
+      return data.keys().hasAll([
+          'propertyId', 'propertyOwnerId', 'tenantId', 'tenantName',
+          'familySize', 'tenantType', 'message', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'propertyId', 'propertyOwnerId', 'tenantId', 'tenantName',
+          'familySize', 'tenantType', 'message', 'status', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.propertyId)
+        && isValidId(data.propertyOwnerId)
+        && isValidId(data.tenantId)
+        && data.tenantName is string && data.tenantName.size() >= 2 && data.tenantName.size() <= 80
+        && data.familySize is number && data.familySize >= 1 && data.familySize <= 20
+        && data.tenantType is string && data.tenantType.size() >= 2 && data.tenantType.size() <= 40
+        && data.message is string && data.message.size() >= 4 && data.message.size() <= 400
+        && data.status is string && data.status in ['pending', 'accepted', 'declined']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // 1. Private User Profiles (PII-isolated to owner)
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'preferredUnit', 'city', 'updatedAt']);
+      allow delete: if false;
+
+      // 1a. User's Saved Listings & Rent Price Change Watchlist (strictly owner-scoped)
+      match /savedListings/{propertyId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(propertyId)
+          && request.auth.uid == userId
+          && existing().userId == request.auth.uid;
+        allow list: if isSignedIn()
+          && request.auth.uid == userId
+          && existing().userId == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(propertyId)
+          && request.auth.uid == userId
+          && isValidSavedListing(incoming())
+          && incoming().propertyId == propertyId
+          && incoming().savedAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow update: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(propertyId)
+          && request.auth.uid == userId
+          && isValidSavedListing(incoming())
+          && existing().userId == request.auth.uid
+          && incoming().userId == existing().userId
+          && incoming().propertyId == existing().propertyId
+          && incoming().savedRent == existing().savedRent
+          && incoming().savedAt == existing().savedAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'lastSeenRent', 'propertyTitle', 'propertyArea', 'updatedAt'
+          ]);
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(propertyId)
+          && request.auth.uid == userId
+          && existing().userId == request.auth.uid;
+      }
+    }
+
+    // 2. Public Rental Properties
+    match /properties/{propertyId} {
+      allow get: if isValidId(propertyId)
+        && (existing().isPublished == true || (isSignedIn() && existing().ownerId == request.auth.uid));
+      allow list: if existing().isPublished == true
+        || (isSignedIn() && existing().ownerId == request.auth.uid);
+      allow create: if isVerifiedUser()
+        && isValidId(propertyId)
+        && isValidProperty(incoming())
+        && incoming().status == 'available'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(propertyId)
+        && isValidProperty(incoming())
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action 1: Owner edits property details or applies tenant feedback improvements
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'ownerName', 'title', 'description', 'rooms', 'bhkType', 'floor',
+            'areaGaj', 'areaSqft', 'monthlyRent', 'securityDeposit', 'negotiable',
+            'furnishing', 'paintCondition', 'preferredTenant', 'maxOccupants',
+            'houseRules', 'ownerPreferenceNote', 'state', 'city', 'area',
+            'addressLine', 'lat', 'lng', 'photoUrl', 'status', 'isPublished', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser()
+        && isValidId(propertyId)
+        && existing().ownerId == request.auth.uid;
+
+      // 2a. Isolated Owner Contact Details (PII strictly restricted to owner)
+      match /ownerContact/{contactId} {
+        allow get: if isSignedIn()
+          && isValidId(propertyId)
+          && isValidId(contactId)
+          && existing().ownerId == request.auth.uid;
+        allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(propertyId)
+          && isValidId(contactId)
+          && isValidOwnerContact(incoming())
+          && incoming().propertyId == propertyId
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/properties/$(propertyId))
+          && get(/databases/$(database)/documents/properties/$(propertyId)).data.ownerId == request.auth.uid;
+        allow update: if isVerifiedUser()
+          && isValidId(propertyId)
+          && isValidId(contactId)
+          && isValidOwnerContact(incoming())
+          && existing().ownerId == request.auth.uid
+          && incoming().propertyId == existing().propertyId
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['contactPhone', 'visitingHours', 'updatedAt']);
+        allow delete: if isVerifiedUser()
+          && isValidId(propertyId)
+          && isValidId(contactId)
+          && existing().ownerId == request.auth.uid;
+      }
+
+      // 2b. Tenant Exit Feedback (Master Gate + Owner/Author privacy + Terminal State Lock)
+      match /feedback/{feedbackId} {
+        allow get: if isSignedIn()
+          && isValidId(propertyId)
+          && isValidId(feedbackId)
+          && (existing().propertyOwnerId == request.auth.uid || existing().tenantId == request.auth.uid);
+        allow list: if isSignedIn()
+          && (existing().propertyOwnerId == request.auth.uid || existing().tenantId == request.auth.uid);
+        allow create: if isVerifiedUser()
+          && isValidId(propertyId)
+          && isValidId(feedbackId)
+          && isValidFeedback(incoming())
+          && incoming().propertyId == propertyId
+          && incoming().tenantId == request.auth.uid
+          && incoming().status == 'new'
+          && incoming().ownerActionNote == ''
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/properties/$(propertyId))
+          && incoming().propertyOwnerId == get(/databases/$(database)/documents/properties/$(propertyId)).data.ownerId;
+        allow update: if isVerifiedUser()
+          && isValidId(propertyId)
+          && isValidId(feedbackId)
+          && isValidFeedback(incoming())
+          && existing().propertyOwnerId == request.auth.uid
+          && existing().status != 'resolved'
+          && incoming().propertyId == existing().propertyId
+          && incoming().propertyOwnerId == existing().propertyOwnerId
+          && incoming().tenantId == existing().tenantId
+          && incoming().reasons == existing().reasons
+          && incoming().comment == existing().comment
+          && incoming().suggestedRent == existing().suggestedRent
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'ownerActionNote', 'updatedAt']);
+        allow delete: if false;
+      }
+
+      // 2c. Tenant Visit & Rental Inquiries (Master Gate + Terminal State Lock)
+      match /inquiries/{inquiryId} {
+        allow get: if isSignedIn()
+          && isValidId(propertyId)
+          && isValidId(inquiryId)
+          && (existing().propertyOwnerId == request.auth.uid || existing().tenantId == request.auth.uid);
+        allow list: if isSignedIn()
+          && (existing().propertyOwnerId == request.auth.uid || existing().tenantId == request.auth.uid);
+        allow create: if isVerifiedUser()
+          && isValidId(propertyId)
+          && isValidId(inquiryId)
+          && isValidInquiry(incoming())
+          && incoming().propertyId == propertyId
+          && incoming().tenantId == request.auth.uid
+          && incoming().status == 'pending'
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/properties/$(propertyId))
+          && incoming().propertyOwnerId == get(/databases/$(database)/documents/properties/$(propertyId)).data.ownerId;
+        allow update: if isVerifiedUser()
+          && isValidId(propertyId)
+          && isValidId(inquiryId)
+          && isValidInquiry(incoming())
+          && existing().propertyOwnerId == request.auth.uid
+          && existing().status == 'pending'
+          && incoming().status in ['accepted', 'declined']
+          && incoming().propertyId == existing().propertyId
+          && incoming().propertyOwnerId == existing().propertyOwnerId
+          && incoming().tenantId == existing().tenantId
+          && incoming().tenantName == existing().tenantName
+          && incoming().familySize == existing().familySize
+          && incoming().tenantType == existing().tenantType
+          && incoming().message == existing().message
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+        allow delete: if false;
+      }
+    }
+  }
+}

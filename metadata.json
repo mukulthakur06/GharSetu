@@ -1,0 +1,6 @@
+{
+  "name": "GharSetu",
+  "description": "Direct house rental marketplace with 10 km map radius search, Gaj and Sq.Ft area filters, owner tenant preferences, and actionable tenant exit feedback.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
